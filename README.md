@@ -1,5 +1,3 @@
-#RISC-V-based NPU FPGA Test Platform
-
 **TernaryNPU** is a project for running a Chipyard-based RISC-V SoC on FPGA boards
 and testing NPU (Neural Processing Unit) hardware in a realistic environment.
 
