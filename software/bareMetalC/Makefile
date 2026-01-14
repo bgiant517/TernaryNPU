@@ -61,6 +61,7 @@ tests = \
 	perf \
 	perf_total \
 	mpgemm \
+	mpgemm_transpose \
 	gemv_single \
 	gemv_double \
 
