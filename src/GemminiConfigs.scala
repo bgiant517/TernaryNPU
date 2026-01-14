@@ -42,7 +42,7 @@ case class GemminiArrayConfig[T <: Data : Arithmetic, U <: Data, V <: Data](
                                                                              sp_capacity: GemminiMemCapacity = CapacityInKilobytes(256),
                                                                              spad_read_delay: Int = 4,
 
-                                                                             acc_banks: Int = 4,
+                                                                             acc_banks: Int = 2,
                                                                              acc_singleported: Boolean = false,
                                                                              acc_sub_banks: Int = -1,
                                                                              acc_capacity: GemminiMemCapacity = CapacityInKilobytes(64),

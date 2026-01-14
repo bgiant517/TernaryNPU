@@ -91,7 +91,6 @@ class MpPE[T <: Data :Arithmetic](inputType: T, weightType: T, max_simultaneous_
       }
     } 
 
-
     io.out_result := ShiftRegister(mul_unit.io.out_result, 1)
     io.out_valid := io.in_valid
     io.out_last := io.in_last

@@ -21,7 +21,7 @@ class WontolicResp[T <: Data: Arithmetic, TagT <: TagQueueTag with Data](inputTy
   val total_rows = UInt(log2Up(ma_length+1).W)
   val tag = tagType 
   val last = Bool()
-  val is_mpgemm = Bool()
+//   val is_mpgemm = Bool()
 }
 
 class Wontolic[T <: Data](inputType: T, outputType: T, ma_length: Int, ma_num: Int, max_simultaneous_matmuls: Int) (implicit ev: Arithmetic[T])  extends Module {
@@ -94,6 +94,7 @@ class Wontolic[T <: Data](inputType: T, outputType: T, ma_length: Int, ma_num: I
         mularraybundle(i).io.in_id :=  VecInit(buffvectorarray.map(_.io.out_id))
         mularraybundle(i).io.in_prop :=  VecInit(buffvectorarray.map(_.io.out_prop))
         mularraybundle(i).io.in_b_transpose := io.in_b_transpose
+        mularraybundle(i).io.in_is_mpgemm := io.in_is_mpgemm
     }
     
     val in_acc_next = ShiftRegister(io.in_acc, 2)

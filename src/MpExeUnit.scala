@@ -21,6 +21,7 @@ class MpExeUnit[T <: Data](inputType: T, weightType: T, outputType: T, ma_length
         val in_fire_counter = Input(UInt(log2Up(ma_length).W))
         val in_acc = Input(Bool())
         val in_preload = Input(Bool())
+        val in_b_transpose = Input(Bool())
 
         val out_c = Output(Vec(ma_num, outputType))
         val out_last = Output(Vec(ma_num, Bool()))
@@ -38,7 +39,9 @@ class MpExeUnit[T <: Data](inputType: T, weightType: T, outputType: T, ma_length
         Module(new MpMularray(inputType, weightType, outputType, ma_length, max_simultaneous_matmuls))
     }
 
-    
+    val packFactor = inputType.getWidth / weightType.getWidth
+    val BVECTYPE  = Vec(4, Vec(ma_length, weightType))
+    val BVECTYPE2 = Vec(ma_length, weightType)
 
     //buffvectorarray의 in_a 값으로 mpexe의 in_a 입력
     for(i <- 0 until ma_length) {
@@ -53,13 +56,13 @@ class MpExeUnit[T <: Data](inputType: T, weightType: T, outputType: T, ma_length
     for(i <- 0 until ma_num) {
         mularraybundle(i).io.in_a := VecInit(buffvectorarray.map(_.io.out_a))
         //io.in_b의 i번째 element를 i번째 mularray에 입력(transpose를 안하기 위해)
-        mularraybundle(i).io.in_b := io.in_b(i)
+        // mularraybundle(i).io.in_b := Mux(io.in_b_transpose, , io.in_b(i))
         // Create a condition that is true only for the selected mularray
-        val b_fire = RegNext(io.in_valid.reduce(_||_))
+        val b_fire = RegNext(io.in_valid.head)
         // Use a Mux to provide the vector data only to the selected mularray.
         // Others get a zero vector. 0.U.asTypeOf(...) creates a wire of the correct type with all bits set to 0.
 
-        mularraybundle(i).io.in_b_fire :=  b_fire
+        // mularraybundle(i).io.in_b_fire :=  b_fire
         
         mularraybundle(i).io.in_fire_counter := io.in_fire_counter
         //in_valid, in_last 등의 신호 입력
@@ -67,6 +70,29 @@ class MpExeUnit[T <: Data](inputType: T, weightType: T, outputType: T, ma_length
         mularraybundle(i).io.in_last :=  VecInit(buffvectorarray.map(_.io.out_last))
         mularraybundle(i).io.in_id :=  VecInit(buffvectorarray.map(_.io.out_id))
         mularraybundle(i).io.in_prop :=  VecInit(buffvectorarray.map(_.io.out_prop))
+        mularraybundle(i).io.in_b_transpose := io.in_b_transpose
+
+        val in_b_sel = Wire(weightType)
+        val in_b_fireSel = Wire(Bool())
+        val in_b_vec = Wire(BVECTYPE2)
+
+        when (!io.in_b_transpose) {
+            // no-transpose: each mularray gets its own weight
+            in_b_sel := io.in_b(i)
+            in_b_fireSel := b_fire
+            in_b_vec := 0.U.asTypeOf(BVECTYPE2)
+
+        } .otherwise {
+            val sel = io.in_fire_counter === (i / 4).U
+            val b_vec = io.in_b.asTypeOf(BVECTYPE)
+
+            in_b_vec := Mux(sel, b_vec(i % 4), 0.U.asTypeOf(BVECTYPE2))
+            in_b_sel := 0.U.asTypeOf(weightType)
+            in_b_fireSel := sel
+        }
+        mularraybundle(i).io.in_b := in_b_sel
+        mularraybundle(i).io.in_b_vec := in_b_vec
+        mularraybundle(i).io.in_b_fire := in_b_fireSel
     }
     
     val in_acc_next = ShiftRegister(io.in_acc, 2)

@@ -54,6 +54,7 @@ class Mularray[T <: Data](inputType: T, outputType: T, ma_length: Int, max_simul
         val in_fire_counter = Input(UInt(log2Up(ma_length).W))
         val in_b_fire = Input(Bool())
         val in_b_transpose = Input(Bool())
+        val in_is_mpgemm = Input(Bool())
 
         val out_sum = Output(outputType)
         val out_last = Output(Bool())

@@ -35,7 +35,7 @@ class LocalAddr(sp_banks: Int, sp_bank_entries: Int, acc_banks: Int, acc_bank_en
   // def acc_bank(dummy: Int = 0) = if (accAddrBits == accBankRowBits) 0.U else data(accAddrBits - 1, accBankRowBits)
   // def acc_row(dummy: Int = 0) = data(accBankRowBits - 1, 0)
   // acc bank 를 block이 round robin 방식으로 쓰도록 수정
-  private val accBlockSize = 16 // 주소 16개 단위로 뱅크 순환
+  private val accBlockSize = 32 // 주소 16개 단위로 뱅크 순환
   private val accBlockOffsetBits = log2Ceil(accBlockSize) // = 4 bits
   def acc_bank(dummy: Int = 0) = data(accBlockOffsetBits + accBankBits - 1, accBlockOffsetBits)
   // 예: 4뱅크, 16개 블록 크기 -> data(4+2-1, 4) -> data(5, 4)

@@ -799,7 +799,7 @@ class ExecuteController[T <: Data, U <: Data, V <: Data](xLen: Int, tagWidth: In
   val w_mask = (0 until block_size).map(_.U < w_matrix_cols) // This is an element-wise mask, rather than a byte-wise mask
 
   val mpgemm_output_data = VecInit(wontolic.io.resp.bits.data.map(_.withWidthOf(accType)))
-  val mpgemm_data_chunks = VecInit(mpgemm_output_data.grouped(16).map(chunk => VecInit(chunk)).toSeq)
+  val mpgemm_data_chunks = VecInit(mpgemm_output_data.grouped(block_size).map(chunk => VecInit(chunk)).toSeq)
 
   val acc_valid = start_array_outputting && write_to_acc && !is_garbage_addr && write_this_row
 
@@ -829,10 +829,11 @@ class ExecuteController[T <: Data, U <: Data, V <: Data](xLen: Int, tagWidth: In
   // Write to accumulator
   for (i <- 0 until acc_banks) {
     if (ex_write_to_acc) {
-      io.acc.write(i).valid := Mux(wontolic.io.resp.bits.is_mpgemm, acc_valid, acc_valid && w_bank === i.U)
+      // io.acc.write(i).valid := Mux(wontolic.io.resp.bits.is_mpgemm, acc_valid, acc_valid && w_bank === i.U)
+      io.acc.write(i).valid := acc_valid
       io.acc.write(i).bits.addr := w_row
-      // val flatData = VecInit(wontolic.io.resp.bits.data.map(_.withWidthOf(accType)).toList)
-      val flatData = Mux(wontolic.io.resp.bits.is_mpgemm, mpgemm_data_chunks(i), mpgemm_data_chunks(0))
+      // val flatData = Mux(wontolic.io.resp.bits.is_mpgemm, mpgemm_data_chunks(i), mpgemm_data_chunks(0))
+      val flatData = mpgemm_data_chunks(i)
       io.acc.write(i).bits.data :=  VecInit(flatData.map(e => VecInit(Seq(e))))
       io.acc.write(i).bits.acc := w_address.accumulate
       io.acc.write(i).bits.mask := w_mask.flatMap(b => Seq.fill(accType.getWidth / (aligned_to * 8))(b))

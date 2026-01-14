@@ -29,20 +29,20 @@ object GemminiConfigs {
     // Spatial array size options
     tileRows = 1,
     tileColumns = 1,
-    meshRows = 16,
-    meshColumns = 16,
+    meshRows = 32,
+    meshColumns = 32,
 
     // Spatial array PE options
     dataflow = Dataflow.BOTH,
 
     // Scratchpad and accumulator
-    sp_capacity = CapacityInKilobytes(256),
-    acc_capacity = CapacityInKilobytes(64),
+    sp_capacity = CapacityInKilobytes(512),
+    acc_capacity = CapacityInKilobytes(128),
 
     sp_banks = 4,
     acc_banks = 4,
 
-    sp_singleported = true,
+    sp_singleported = false,
     acc_singleported = false,
 
     // DNN options
@@ -56,12 +56,12 @@ object GemminiConfigs {
     reservation_station_entries_ex = 16,
 
     // Ld/Ex/St instruction queue lengths
-    ld_queue_length = 16,
+    ld_queue_length = 8,
     st_queue_length = 2,
     ex_queue_length = 8,
 
     // DMA options
-    max_in_flight_mem_reqs = 32,
+    max_in_flight_mem_reqs = 16,
 
     dma_maxbytes = 64,
     dma_buswidth = 128,
@@ -146,6 +146,7 @@ object GemminiConfigs {
         val sat = Mux(sign, minsat, maxsat)
 
         Mux(overflow, sat, rec_fn_to_in.io.out.asTypeOf(t))
+        // fNFromRecFN(f.expWidth, f.sigWidth, muladder.io.out).asSInt
       },
       8, Float(8, 24), -1,
       identity = "1.0",
